@@ -4,18 +4,20 @@ const app = express();
 
 app.get('/download', async (req, res) => {
   try {
-    const { url, token, filename = 'file' } = req.query;
+    const { id, token, filename = 'file' } = req.query;
     
-    const response = await axios.get(url, {
+    // Gọi trực tiếp Google Drive API
+    const driveUrl = `https://www.googleapis.com/drive/v3/files/${id}?alt=media`;
+    const response = await axios.get(driveUrl, {
       headers: { 'Authorization': `Bearer ${token}` },
-      responseType: 'stream' // Quan trọng: stream dữ liệu
+      responseType: 'stream' // Quan trọng: Stream dữ liệu
     });
 
     // Thiết lập headers
     res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
     
-    // Stream trực tiếp không tốn RAM
+    // Pipe dữ liệu từ Google Drive → Render → Người dùng
     response.data.pipe(res);
     
   } catch (error) {
@@ -23,6 +25,4 @@ app.get('/download', async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('Proxy server đã sẵn sàng');
-});
+app.listen(process.env.PORT || 3000, () => console.log('Proxy đã sẵn sàng'));
