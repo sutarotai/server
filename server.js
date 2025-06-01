@@ -2,23 +2,27 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-app.get('/proxy', async (req, res) => {
+app.get('/download', async (req, res) => {
   try {
-    const { url, token, filename = 'download' } = req.query;
+    const { url, token, filename = 'file' } = req.query;
     
     const response = await axios.get(url, {
       headers: { 'Authorization': `Bearer ${token}` },
-      responseType: 'stream'
+      responseType: 'stream' // Quan trọng: stream dữ liệu
     });
 
+    // Thiết lập headers
     res.setHeader('Content-Type', response.headers['content-type'] || 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
     
+    // Stream trực tiếp không tốn RAM
     response.data.pipe(res);
+    
   } catch (error) {
-    res.status(500).send('Error: ' + error.message);
+    res.status(500).send('Lỗi: ' + error.message);
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Proxy server running on port ${PORT}`));
+app.listen(process.env.PORT || 3000, () => {
+  console.log('Proxy server đã sẵn sàng');
+});
